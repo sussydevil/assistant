@@ -192,6 +192,11 @@ class Phrases:
                 'discord_1.wav': 'Открываю дискорд',
                 'discord_2.wav': 'Дискорд открывается'
             }
+        not_supported = \
+            {
+                'not_supported_1.wav': 'Упс, данная функция пока не поддерживается на вашей платформе',
+                'not_supported_2.wav': 'Эта команда не поддерживается на вашем устройстве, извините',
+            }
 
     class BrowserSiteOpening:
         """фразы: браузер"""

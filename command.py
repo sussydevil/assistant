@@ -19,7 +19,6 @@ player = VLC()
 
 class CommandBlock:
     """класс команд"""
-
     @staticmethod
     def play_voice(phrase):
         """проигрывание голоса с понижением и повышением громкости"""
@@ -31,6 +30,7 @@ class CommandBlock:
             player.smooth_volume_growth(volume)
         else:
             Speech.play_voice(phrase)
+        return 0
 
     @staticmethod
     def command_block(index, q: Queue = None, recognized_text=None):
@@ -100,7 +100,7 @@ class CommandBlock:
             if is_playing == 1:
                 CommandBlock.play_voice(Phrases.Music.next)
                 player.next()
-                logging.info('Playing song changed ->')
+                logging.info('Playing song changed -> next')
                 return
 
         # предыдущая песня
@@ -108,15 +108,15 @@ class CommandBlock:
             if is_playing == 1:
                 CommandBlock.play_voice(Phrases.Music.previous)
                 player.previous()
-                logging.info('Playing song changed <-')
+                logging.info('Playing song changed -> previous')
                 return
 
+        # ВНЕШНИЕ ПРОГРАММЫ
         # запуск браузера
         if 900 <= index <= 909:
             CommandBlock.play_voice(Phrases.AppOpening.browser)
             os.system('python -m webbrowser "http://google.com/"')
             logging.info('Browser -> opened')
-            # queue.put(["Браузер открыт"], True, 0.1)
 
         # запуск вконтакте
         if 910 <= index <= 919:
@@ -138,12 +138,14 @@ class CommandBlock:
 
         # поиск яндекс
         if 940 <= index <= 949:
+            CommandBlock.play_voice(Phrases.BrowserSiteOpening.user_search)
             remove_name = speech.assistant_name
             remove_command = ['найди', 'найти']
             list_of_words = recognized_text.split()
             output_list = []
             is_name_found = False
             is_command_found = False
+            # удаление команды и имени помощника из запроса
             for word in list_of_words:
                 if is_name_found and is_command_found:
                     output_list.append(word)
@@ -159,42 +161,47 @@ class CommandBlock:
             output_string = ' '.join(output_list)
             os.system('python -m webbrowser "https://yandex.ru/search/?text={0}"'.
                       format(urllib.parse.quote(output_string)))
+            logging.info("Searching -> {0}".format(output_string))
             return
 
         # запуск терминала
         if 1000 <= index <= 1009:
-            CommandBlock.play_voice(Phrases.AppOpening.terminal)
             if platform == "win32" or platform == "linux" or platform == "linux2":
                 logging.warning("This function is not supported on {0}.".format(platform))
+                CommandBlock.play_voice(Phrases.AppOpening.not_supported)
                 return
+            CommandBlock.play_voice(Phrases.AppOpening.terminal)
             os.system('open -a terminal')
             logging.info('Terminal -> opened')
             return
 
         # запуск телеграм
         if 1010 <= index <= 1019:
-            CommandBlock.play_voice(Phrases.AppOpening.telegram)
             if platform == "win32" or platform == "linux" or platform == "linux2":
                 logging.warning("This function is not supported on {0}.".format(platform))
+                CommandBlock.play_voice(Phrases.AppOpening.not_supported)
                 return
+            CommandBlock.play_voice(Phrases.AppOpening.telegram)
             os.system('open -a telegram')
             logging.info('Telegram -> opened')
             return
 
         # запуск дискорда
         if 1020 <= index <= 1029:
-            CommandBlock.play_voice(Phrases.AppOpening.discord)
             if platform == "win32" or platform == "linux" or platform == "linux2":
                 logging.warning("This function is not supported on {0}.".format(platform))
+                CommandBlock.play_voice(Phrases.AppOpening.not_supported)
                 return
+            CommandBlock.play_voice(Phrases.AppOpening.discord)
             os.system('open -a discord')
-            logging.info('Discord opened')
+            logging.info('Discord -> opened')
             return
 
+        # РЕЛЕ
         # включение реле_1
         if 1200 <= index <= 1209:
             ans = Mqtt.change_relay_state(1, 1)
-            if ans == -1:
+            if ans == -1 or ans == -2:
                 CommandBlock.play_voice(Phrases.Mqtt.relay_connection_error)
                 logging.error('Relay unreachable. Internet connection lost.')
                 return
@@ -204,7 +211,7 @@ class CommandBlock:
         # выключение реле_1
         if 1210 <= index <= 1219:
             ans = Mqtt.change_relay_state(1, 0)
-            if ans == -1:
+            if ans == -1 or ans == -2:
                 CommandBlock.play_voice(Phrases.Mqtt.relay_connection_error)
                 logging.error('Relay unreachable. Internet connection lost.')
                 return
@@ -214,7 +221,7 @@ class CommandBlock:
         # включение реле_2
         if 1220 <= index <= 1229:
             ans = Mqtt.change_relay_state(2, 1)
-            if ans == -1:
+            if ans == -1 or ans == -2:
                 CommandBlock.play_voice(Phrases.Mqtt.relay_connection_error)
                 logging.error('Relay unreachable. Internet connection lost.')
                 return
@@ -224,17 +231,17 @@ class CommandBlock:
         # выключение реле_2
         if 1230 <= index <= 1239:
             ans = Mqtt.change_relay_state(2, 0)
-            if ans == -1:
+            if ans == -1 or ans == -2:
                 CommandBlock.play_voice(Phrases.Mqtt.relay_connection_error)
                 logging.error('Relay unreachable. Internet connection lost.')
                 return
             CommandBlock.play_voice(Phrases.Mqtt.relay_ok)
             logging.info('Second relay state changed -> OFF')
-        # -----------------------------------------
+
         # включение реле_3
         if 1240 <= index <= 1249:
             ans = Mqtt.change_relay_state(3, 1)
-            if ans == -1:
+            if ans == -1 or ans == -2:
                 CommandBlock.play_voice(Phrases.Mqtt.relay_connection_error)
                 logging.error('Relay unreachable. Internet connection lost.')
                 return
@@ -244,7 +251,7 @@ class CommandBlock:
         # выключение реле_3
         if 1250 <= index <= 1259:
             ans = Mqtt.change_relay_state(3, 0)
-            if ans == -1:
+            if ans == -1 or ans == -2:
                 CommandBlock.play_voice(Phrases.Mqtt.relay_connection_error)
                 logging.error('Relay unreachable. Internet connection lost.')
                 return
@@ -253,7 +260,9 @@ class CommandBlock:
 
         # открытие графического интерфейса
         if 1300 <= index <= 1309:
+            CommandBlock.play_voice(Phrases.GUI.gui_open)
             T = multiprocessing.Process(target=ui_controller.start_ui, args=(q,))
+            logging.info('GUI -> opened')
             T.start()
 
     @staticmethod
