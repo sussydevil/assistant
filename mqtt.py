@@ -13,8 +13,8 @@ import json
 import yaml
 import time
 
-# файл конфигурации границ значений датчиков
 mqtt_sensor_scope_path = "sensor.conf"
+mqtt_config_path = "mqtt_connection.conf"
 queue = Queue()
 
 
@@ -109,19 +109,17 @@ class SensorWarningTime:
 
 class Mqtt:
     """класс для работы с mqtt"""
-
-    # запуск получения данных с MQTT
     @staticmethod
     def start(q: Queue = None):
         """открытие MQTT соединения"""
-        options = wiotp.sdk.application.parseConfigFile("mqtt_connection.conf")
+        options = wiotp.sdk.application.parseConfigFile(mqtt_config_path)
         client = wiotp.sdk.application.ApplicationClient(options)
         client.logger.setLevel(logging.INFO)
         global queue
         queue = q
-        SensorScope.mqtt_sensor_scope_read()
         client.logger.setLevel(logging.INFO)
         client.connect()
+        SensorScope.mqtt_sensor_scope_read()
         client.deviceEventCallback = Mqtt.get_data
         client.subscribeToDeviceEvents()
         while True:
@@ -130,7 +128,7 @@ class Mqtt:
     @staticmethod
     def change_relay_state(relay_number, relay_state):
         """изменение состояния реле"""
-        options = wiotp.sdk.application.parseConfigFile("mqtt_connection.conf")
+        options = wiotp.sdk.application.parseConfigFile(mqtt_config_path)
         client = wiotp.sdk.application.ApplicationClient(options)
         data = {'r_n': relay_number, 'r_s': relay_state}
         try:
@@ -165,18 +163,18 @@ class Mqtt:
                     datetime.now().timestamp() - SensorWarningTime.tem_low > SensorWarningTime.interval:
                 SensorWarningTime.tem_low = datetime.now().timestamp()
                 Speech.play_voice(Phrases.Mqtt.low_temperature)
-                warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                message = str(datetime.now().strftime("%H:%M:%S - ")) \
                            + "Нижняя граница t: Включение обогревателя."
-                queue.put([warning_])
+                queue.put([message])
                 ans = Mqtt.change_relay_state(4, 1)
                 if ans == -1 or ans == -2:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Нижняя граница t: Невозможно включить обогреватель."
-                    queue.put([warning_])
+                    queue.put([message])
                 else:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Нижняя граница t: Обогреватель включен."
-                    queue.put([warning_])
+                    queue.put([message])
 
         # высокая температура
         if temperature > SensorScope.temperature[1]:
@@ -184,17 +182,17 @@ class Mqtt:
                     datetime.now().timestamp() - SensorWarningTime.tem_high > SensorWarningTime.interval:
                 SensorWarningTime.tem_high = datetime.now().timestamp()
                 Speech.play_voice(Phrases.Mqtt.high_temperature)
-                warning_ = str(datetime.now().strftime("%H:%M:%S - ")) + "Верхняя граница t: Выключение обогревателя."
-                queue.put([warning_])
+                message = str(datetime.now().strftime("%H:%M:%S - ")) + "Верхняя граница t: Выключение обогревателя."
+                queue.put([message])
                 ans = Mqtt.change_relay_state(4, 0)
                 if ans == -1 or ans == -2:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Верхняя граница t: Невозможно выключить обогреватель."
-                    queue.put([warning_])
+                    queue.put([message])
                 else:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Верхняя граница t: Обогреватель выключен."
-                    queue.put([warning_])
+                    queue.put([message])
 
         # повышенное содержание CO2
         if co2 > SensorScope.CO2[1]:
@@ -202,18 +200,18 @@ class Mqtt:
                     datetime.now().timestamp() - SensorWarningTime.CO2_high > SensorWarningTime.interval:
                 SensorWarningTime.CO2_high = datetime.now().timestamp()
                 Speech.play_voice(Phrases.Mqtt.high_CO2)
-                warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                message = str(datetime.now().strftime("%H:%M:%S - ")) \
                            + "Верхняя граница CO2: Включение вентиляции."
-                queue.put([warning_])
+                queue.put([message])
                 ans = Mqtt.change_relay_state(5, 1)
                 if ans == -1 or ans == -2:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Верхняя граница CO2: Невозможно включить вентиляцию."
-                    queue.put([warning_])
+                    queue.put([message])
                 else:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Верхняя граница CO2: Вентиляция включена."
-                    queue.put([warning_])
+                    queue.put([message])
 
         # нормальное содержание CO2
         if co2 < SensorScope.CO2[0]:
@@ -221,18 +219,18 @@ class Mqtt:
                     datetime.now().timestamp() - SensorWarningTime.CO2_low > SensorWarningTime.interval:
                 SensorWarningTime.CO2_low = datetime.now().timestamp()
                 Speech.play_voice(Phrases.Mqtt.low_CO2)
-                warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                message = str(datetime.now().strftime("%H:%M:%S - ")) \
                            + "Нижняя граница CO2: Выключение вентиляции."
-                queue.put([warning_])
+                queue.put([message])
                 ans = Mqtt.change_relay_state(5, 0)
                 if ans == -1 or ans == -2:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Нижняя граница CO2: Невозможно выключить вентиляцию."
-                    queue.put([warning_])
+                    queue.put([message])
                 else:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Нижняя граница CO2: Вентиляция выключена."
-                    queue.put([warning_])
+                    queue.put([message])
 
         # пониженная влажность
         if humidity < SensorScope.humidity[0]:
@@ -240,37 +238,37 @@ class Mqtt:
                     datetime.now().timestamp() - SensorWarningTime.hum_low > SensorWarningTime.interval:
                 SensorWarningTime.hum_low = datetime.now().timestamp()
                 Speech.play_voice(Phrases.Mqtt.low_humidity)
-                warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                message = str(datetime.now().strftime("%H:%M:%S - ")) \
                            + "Нижняя граница %: Включение увлажнителя"
-                queue.put([warning_])
+                queue.put([message])
                 ans = Mqtt.change_relay_state(6, 1)
                 if ans == -1 or ans == -2:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Нижняя граница %: Невозможно включить увлажнитель."
-                    queue.put([warning_])
+                    queue.put([message])
                 else:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Нижняя граница %: Увлажнитель включен."
-                    queue.put([warning_])
+                    queue.put([message])
 
-        # высокая влажность
+        # повышенная влажность
         if humidity > SensorScope.humidity[1]:
             if SensorWarningTime.hum_high == 0 or \
                     datetime.now().timestamp() - SensorWarningTime.hum_high > SensorWarningTime.interval:
                 SensorWarningTime.hum_high = datetime.now().timestamp()
                 Speech.play_voice(Phrases.Mqtt.high_humidity)
-                warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                message = str(datetime.now().strftime("%H:%M:%S - ")) \
                            + "Верхняя граница %: Выключение увлажнителя."
-                queue.put([warning_])
+                queue.put([message])
                 ans = Mqtt.change_relay_state(6, 0)
                 if ans == -1 or ans == -2:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Верхняя граница %: Невозможно выключить увлажнитель."
-                    queue.put([warning_])
+                    queue.put([message])
                 else:
-                    warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                    message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                + "Верхняя граница %: Увлажнитель выключен."
-                    queue.put([warning_])
+                    queue.put([message])
 
         # высокое атмосферное давление
         if pressure > SensorScope.pressure[1]:
@@ -278,9 +276,9 @@ class Mqtt:
                     datetime.now().timestamp() - SensorWarningTime.pre_high > SensorWarningTime.pressure_interval:
                 SensorWarningTime.pre_high = datetime.now().timestamp()
                 Speech.play_voice(Phrases.Mqtt.high_pressure)
-                warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
+                message = str(datetime.now().strftime("%H:%M:%S - ")) \
                                       + "Верхняя граница Pa: Может быть плохое самочувствие у метеозависимых людей."
-                queue.put([warning_])
+                queue.put([message])
 
         # низкое атмосферное давление
         if pressure < SensorScope.pressure[0]:
@@ -288,7 +286,7 @@ class Mqtt:
                     datetime.now().timestamp() - SensorWarningTime.pre_low > SensorWarningTime.pressure_interval:
                 SensorWarningTime.pre_low = datetime.now().timestamp()
                 Speech.play_voice(Phrases.Mqtt.low_pressure)
-                warning_ = str(datetime.now().strftime("%H:%M:%S - ")) \
-                           + "Нижняя граница Pa:Может быть плохое самочувствие у метеозависимых людей."
-                queue.put([warning_])
+                message = str(datetime.now().strftime("%H:%M:%S - ")) \
+                           + "Нижняя граница Pa: Может быть плохое самочувствие у метеозависимых людей."
+                queue.put([message])
         return 0
