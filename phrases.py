@@ -34,7 +34,7 @@ class Phrases:
         recognition_on = \
             {
                 'recognition_on_1.wav': 'Включаю распознавание речи',
-                'recognition_on_2.wav': 'Распознавание речи вкключается'
+                'recognition_on_2.wav': 'Распознавание речи включается'
             }
         sensor_configuring = \
             {
@@ -51,7 +51,7 @@ class Phrases:
         """фразы: музыка"""
         on_load = \
             {
-                'msc_on_load_1.wav': 'Включаю музыку',
+                'msc_on_load_1.wav': 'Включаю вашу музыку',
                 'msc_on_load_2.wav': 'Включаю',
                 'msc_on_load_3.wav': 'Сейчас включу'
             }
@@ -65,25 +65,29 @@ class Phrases:
             {
                 'next_song_1.wav': 'Переключаю',
                 'next_song_2.wav': 'Хорошо, переключаю вперёд',
-                'next_song_3.wav': 'Переключаю вперёд'
+                'next_song_3.wav': 'Переключаю вперёд',
+                'next_song_4.wav': 'Сейчас',
             }
         previous = \
             {
                 'prev_song_1.wav': 'Переключаю',
                 'prev_song_2.wav': 'Хорошо, переключаю назад',
                 'prev_song_3.wav': 'Переключаю назад',
+                'prev_song_4.wav': 'Сейчас',
             }
         volume_lower = \
             {
                 'vol_lower_1.wav': 'Хорошо',
                 'vol_lower_2.wav': 'Принято',
-                'vol_lower_3.wav': 'Поняла, сейчас'
+                'vol_lower_3.wav': 'Поняла, сейчас',
+                'vol_lower_4.wav': 'Сейчас убавлю'
             }
         volume_higher = \
             {
                 'vol_higher_1.wav': 'Хорошо',
                 'vol_higher_2.wav': 'Принято',
-                'vol_higher_3.wav': 'Поняла, сейчас'
+                'vol_higher_3.wav': 'Поняла, сейчас',
+                'vol_higher_4.wav': 'Сейчас прибавлю'
             }
         pause = \
             {
@@ -121,7 +125,7 @@ class Phrases:
             {
                 'relay_1.wav': 'Хорошо, статус реле изменён',
                 'relay_2.wav': 'Я поменяла статус реле',
-                'relay_.wav': 'Ага, поняла'
+                'relay_3.wav': 'Ага, поняла'
             }
         low_temperature = \
             {
@@ -205,4 +209,18 @@ class Phrases:
             {
                 'youtube_1.wav': 'Открываю ютуб',
                 'youtube_2.wav': 'Ютуб сейчас откроется'
+            }
+        user_search = \
+            {
+                'user_search_1.wav': 'Давайте поищем',
+                'user_search_2.wav': 'Хорошо, сейчас найду'
+            }
+
+    class GUI:
+        """фразы: графический интерфейс"""
+        gui_open = \
+            {
+                'gui_open_1.wav': 'Открываю интерфейс',
+                'gui_open_2.wav': 'Сейчас открою',
+                'gui_open_3.wav': 'Графический интерфейс открывается'
             }
