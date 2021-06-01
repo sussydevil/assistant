@@ -53,10 +53,10 @@ class Speech:
         if not os.path.exists(os.path.abspath(os.curdir) + wav_folder + key):
             ans = Speech.__create_wav(phrase, key)
         if ans == -1:
-            logging.error("No wav voice file found, 'cause Unitools API returned not 200.")
+            logging.error("No wav voice file found, 'cause Unitools API returned not 200")
             return
         if ans == -2:
-            logging.error("No wav voice file found, 'cause no connection found.")
+            logging.error("No wav voice file found, 'cause no connection found")
             return
         Speech.__play_wav(key)
         return 0
@@ -104,4 +104,3 @@ class Speech:
                 f.write(audio)
         else:
             return -1
-        return 0
