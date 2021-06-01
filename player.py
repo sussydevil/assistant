@@ -39,6 +39,7 @@ class VLC:
             return -1
         self.listPlayer = self.Player.media_list_player_new()
         self.listPlayer.set_media_list(self.mediaList)
+        logging.info('Playlist -> added')
 
     def play(self):
         """проигрывание"""
