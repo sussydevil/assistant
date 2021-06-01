@@ -179,27 +179,28 @@ class Window(QtWidgets.QMainWindow, ui.Ui_MainWindow):
         """обновление значений датчиков"""
         data = Sqlite.read_last()
         # в зависимости от показаний, Label принимает зеленый или красный цвет
+        # температура
         if data[1] > SensorScope.temperature[1] or data[1] < SensorScope.temperature[0]:
             self.TLabelValue.setStyleSheet("QLabel {color:#CD5C5C;}")
         elif data[1] > SensorScope.temperature[1] * 0.9 or data[1] < SensorScope.temperature[0] * 1.1:
             self.TLabelValue.setStyleSheet("QLabel {color:#FF8C00;}")
         else:
             self.TLabelValue.setStyleSheet("QLabel {color:#90EE90;}")
-
+        # влажность
         if data[2] > SensorScope.humidity[1] or data[2] < SensorScope.humidity[0]:
             self.HLabelValue.setStyleSheet("QLabel {color:#CD5C5C;}")
         elif data[2] > SensorScope.humidity[1] * 0.9 or data[2] < SensorScope.humidity[0] * 1.1:
             self.HLabelValue.setStyleSheet("QLabel {color:#FF8C00;}")
         else:
             self.HLabelValue.setStyleSheet("QLabel {color:#90EE90;}")
-
+        # давление
         if data[3] > SensorScope.pressure[1] or data[3] < SensorScope.pressure[0]:
             self.PLabelValue.setStyleSheet("QLabel {color:#CD5C5C;}")
         elif data[3] > SensorScope.pressure[1] * 0.98 or data[3] < SensorScope.pressure[0] * 1.02:
             self.PLabelValue.setStyleSheet("QLabel {color:#FF8C00;}")
         else:
             self.PLabelValue.setStyleSheet("QLabel {color:#90EE90;}")
-
+        # углекислый газ
         if data[4] > SensorScope.CO2[1]:
             self.CLabelValue.setStyleSheet("QLabel {color:#CD5C5C;}")
         elif data[4] > SensorScope.CO2[1] * 0.9:

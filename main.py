@@ -10,7 +10,6 @@ from phrases import Phrases
 from sqlite import Sqlite
 from speech import Speech
 from time import sleep
-from player import VLC
 import logging
 import pyaudio
 import json
@@ -21,11 +20,10 @@ logging.basicConfig(level=logging.DEBUG, format='%(process)d (%(name)s) - %(leve
 mqtt_config_path = "mqtt_connection.conf"
 mqtt_sensor_scope_path = "sensor.conf"
 model_path = "model"
-player = VLC()
 
 
-# класс для связи mqtt модуля с графическим интерфейсом
 class QueueGetter:
+    """класс для связи mqtt модуля с графическим интерфейсом"""
     queue = Queue()
 
 
@@ -96,9 +94,8 @@ def main():
             if not name_needed and index >= 900:
                 if not Speech.text_analyse(recognized_text, name_needed=True, name_check=True):
                     continue
-            if not recognized_text == "":
-                print("Recognized: " + recognized_text + " Command index: " + str(index))
-            # отправка команды в командный блок
+            print("Recognized: " + recognized_text + " Command index: " + str(index))
+            # отправка команды в командный блок отдельным потоком
             thread = Thread(target=CommandBlock.command_block(index, QueueGetter.queue, recognized_text), daemon=True)
             thread.start()
 
