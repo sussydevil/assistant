@@ -152,7 +152,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "🤖 Assistant Center"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "🤖 Графический интерфейс"))
         self.SensorGroupBox.setTitle(_translate("MainWindow", "Данные с датчиков"))
         self.CLabelValue.setText(_translate("MainWindow", "Nan"))
         self.PLabelValue.setText(_translate("MainWindow", "Nan"))

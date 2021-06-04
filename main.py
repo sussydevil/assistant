@@ -79,6 +79,11 @@ def main():
 
     # бесконечное распознавание голоса
     while True:
+        try:
+            answer = Queues.mqtt_voice.get_nowait()
+            Executor.play_voice(answer, Queues.voice_play, Queues.voice_status)
+        except queue.Empty:
+            pass
         data = stream.read(4000, exception_on_overflow=False)
         if len(data) == 0:
             break
@@ -93,13 +98,8 @@ def main():
             # отправка команды в командный блок
             Executor.execute(index, Queues.mqtt_notifications,
                              Queues.voice_status, Queues.voice_play, recognized_text)
-        try:
-            answer = Queues.mqtt_voice.get_nowait()
-            Executor.play_voice(answer)
-        except queue.Empty:
-            pass
 
 
-# точка входа в программу
+# start main process
 if __name__ == '__main__':
     main()
