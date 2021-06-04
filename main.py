@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # extended version
-from mqtt import Mqtt, mqtt_sensor_scope, mqtt_connection_configuring
 from multiprocessing import Process, Queue
 from vosk import Model, KaldiRecognizer
-from command import CommandBlock
-from threading import Thread
+from voice import voice_loop, Analyse
+from executor import Executor
 from phrases import Phrases
 from sqlite import Sqlite
-from speech import Speech
 from time import sleep
+from mqtt import Mqtt
 import logging
 import pyaudio
+import queue
 import json
 import sys
 import os
@@ -22,24 +22,28 @@ mqtt_sensor_scope_path = "sensor.conf"
 model_path = "model"
 
 
-class QueueGetter:
-    """класс для связи mqtt модуля с графическим интерфейсом"""
-    queue = Queue()
+class Queues:
+    """класс для связи процессов друг с другом"""
+    mqtt_notifications = Queue()
+    mqtt_voice = Queue()
+    voice_play = Queue()
+    voice_status = Queue()
 
 
 def main():
     """распознавание голоса, вызов других функций и процессов по необходимости"""
-    # создание папки для хранения голоса
-    if not os.path.exists('wav'):
-        os.mkdir('wav')
-    Speech.play_voice(Phrases.Load.on_load)
-    sleep(2)
+    # отдельный процесс для воспроизведения голоса с реализацией очереди
+    voice_process = Process(target=voice_loop,
+                            args=(Queues.voice_play, Queues.voice_status), daemon=True)
+    voice_process.start()
 
+    Queues.voice_play.put(Phrases.Load.on_load)
+    sleep(2)
     # проверка на наличие модели
     if not os.path.exists(model_path):
-        Speech.play_voice(Phrases.Load.model_error)
+        Queues.voice_play.put(Phrases.Load.model_error)
         sys.exit(1)
-    Speech.play_voice(Phrases.Load.model_ok)
+    Queues.voice_play.put(Phrases.Load.model_ok)
     sleep(2)
 
     # создание объектов для распознавания
@@ -51,26 +55,26 @@ def main():
 
     # создание БД, если её нет
     Sqlite.create_database()
-    Speech.play_voice(Phrases.Load.database_ok)
+    Queues.voice_play.put(Phrases.Load.database_ok)
     sleep(2)
 
     # создание настроек границ датчиков
     if not os.path.exists(mqtt_sensor_scope_path):
-        Speech.play_voice(Phrases.Load.sensor_configuring)
-        mqtt_sensor_scope(mqtt_sensor_scope_path)
+        Queues.voice_play.put(Phrases.Load.sensor_configuring)
+        Mqtt.sensor_scope(mqtt_sensor_scope_path)
 
     # создание настроек подключения к MQTT
     if not os.path.exists(mqtt_config_path):
-        Speech.play_voice(Phrases.Load.mqtt_configuring)
-        mqtt_connection_configuring(mqtt_config_path)
+        Queues.voice_play.put(Phrases.Load.mqtt_configuring)
+        Mqtt.connection_configuring(mqtt_config_path)
 
-    # подключение к MQTT для получения данных с датчиков (отдельный процесс), передача queue
-    mqtt_reading_process = Process(target=Mqtt.start, args=(QueueGetter.queue,))
-    mqtt_reading_process.start()
-    Speech.play_voice(Phrases.Load.ibm_ok)
+    # отдельный процесс для получения данных с датчиков по MQTT
+    mqtt_process = Process(target=Mqtt.start, args=(Queues.mqtt_notifications, Queues.mqtt_voice))
+    mqtt_process.start()
+    Queues.voice_play.put(Phrases.Load.ibm_ok)
     sleep(2)
 
-    Speech.play_voice(Phrases.Load.recognition_on)
+    Queues.voice_play.put(Phrases.Load.recognition_on)
     sleep(2)
 
     # бесконечное распознавание голоса
@@ -82,22 +86,18 @@ def main():
             x = json.loads(rec.Result())
             # результат распознавания
             recognized_text = x["text"]
-            # по умолчанию имя помощника нужно для команд
-            name_needed = True
-            # но если воспроизводятся песни, то имя не нужно для команд, связанных с ними
-            if CommandBlock.player_is_playing() == 1:
-                name_needed = False
-            index, percentage = Speech.text_analyse(recognized_text, name_needed)
+            index, percentage = Analyse.recognized_text(recognized_text, name_needed=True)
             if index == -1:
                 continue
-            # если музыка играет, то доступны команды без имени помощника, только связанные с музыкой (index = 0..899)
-            if not name_needed and index >= 900:
-                if not Speech.text_analyse(recognized_text, name_needed=True, name_check=True):
-                    continue
             print("Recognized: " + recognized_text + " Command index: " + str(index))
-            # отправка команды в командный блок отдельным потоком
-            thread = Thread(target=CommandBlock.command_block(index, QueueGetter.queue, recognized_text), daemon=True)
-            thread.start()
+            # отправка команды в командный блок
+            Executor.execute(index, Queues.mqtt_notifications,
+                             Queues.voice_status, Queues.voice_play, recognized_text)
+        try:
+            answer = Queues.mqtt_voice.get_nowait()
+            Executor.play_voice(answer)
+        except queue.Empty:
+            pass
 
 
 # точка входа в программу
