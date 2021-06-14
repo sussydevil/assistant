@@ -11,14 +11,11 @@ import queue
 import wave
 import os
 
-wav_folder = 'wav'
-assistant_name = ['катя', 'кать', 'кати', 'кате', 'екатерина', 'екатерины', 'екатерине']
-
 
 class Analyse:
     """class: analyse recognized text"""
     @staticmethod
-    def recognized_text(recognized_text, name_needed=True, name_check=False):
+    def recognized_text(recognized_text, assistant_name, name_needed=True, name_check=False):
         """public function: analyse of recognised text and return command index"""
         best_result = -1
         best_result_index = -1
@@ -34,13 +31,13 @@ class Analyse:
                 return -1, -1
             for key, value in commands_list.items():
                 ratio = fuzz.token_set_ratio(value, recognized_text)
-                if (ratio > 75) and (ratio > best_result):
+                if (ratio > 70) and (ratio > best_result):
                     best_result = ratio
                     best_result_index = key
         else:
             for key, value in commands_list.items():
                 ratio = fuzz.token_set_ratio(value, recognized_text)
-                if (ratio > 75) and (ratio > best_result):
+                if (ratio > 70) and (ratio > best_result):
                     best_result = ratio
                     best_result_index = key
         return best_result_index, best_result
@@ -50,7 +47,7 @@ class SpeechPlayer:
     """class: work with assistant's speech"""
     @staticmethod
     def play_voice(dictionary, folder):
-        """public function: play random phrase from dictionary and save to the current folder"""
+        """public function: play random phrase from dictionary and save to the current folder if file not exists"""
         key, phrase = random.choice(list(dictionary.items()))
         answer = 0
         if not os.path.exists(os.path.join(folder, key)):
@@ -116,8 +113,8 @@ class SpeechPlayer:
             return 1
 
 
-def voice_loop(dictionary: Queue, status: Queue):
-    """public function: loop and wait for new tasks of playing voice"""
+def voice_loop(dictionary: Queue, status: Queue, wav_folder):
+    """public function: loop and wait for new tasks of playing voice (dictionary: Queue)"""
     while True:
         try:
             phrases = dictionary.get(True, 10)
